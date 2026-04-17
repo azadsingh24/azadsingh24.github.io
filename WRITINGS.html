@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>writings / azad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --ink: #111110;
+    --muted: #7a7870;
+    --line: #dddbd4;
+    --hover-bg: #eceae3;
+    --red: #c8451a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: 'EB Garamond', Georgia, serif; font-size: 17px; line-height: 1.6; }
+
+  /* NAV */
+  nav { padding: 28px 48px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--line); }
+  .nav-left { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+  .nav-right { font-family: 'DM Mono', monospace; font-size: 12px; display: flex; gap: 28px; }
+  .nav-right a { color: var(--muted); text-decoration: none; }
+  .nav-right a.active { color: var(--ink); }
+
+  .page-header { padding: 40px 48px 0; }
+  .page-header h1 { font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 400; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+
+  /* MONTH FILTER */
+  .month-bar { padding: 20px 48px 0; font-family: 'DM Mono', monospace; font-size: 11.5px; color: var(--muted); display: flex; gap: 14px; flex-wrap: wrap; }
+  .month-btn { cursor: pointer; padding: 2px 0; border: none; background: none; font-family: inherit; font-size: inherit; color: inherit; border-bottom: 1px solid transparent; transition: color 0.15s; }
+  .month-btn:hover { color: var(--ink); }
+  .month-btn.active { color: var(--ink); border-bottom-color: var(--ink); }
+
+  /* LIST */
+  .writings-container { padding: 20px 48px 60px; max-width: 900px; }
+  .writings-list { list-style: none; }
+  .writing-item { display: grid; grid-template-columns: 72px 1fr auto; align-items: baseline; gap: 0 20px; padding: 13px 8px; border-bottom: 0.5px solid var(--line); cursor: pointer; border-radius: 3px; transition: background 0.1s; }
+  .writing-item:hover { background: var(--hover-bg); }
+  .writing-date { font-family: 'DM Mono', monospace; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+  .writing-content { display: flex; flex-direction: column; gap: 2px; }
+  .writing-title { font-size: 16.5px; font-weight: 500; color: var(--ink); text-decoration: none; line-height: 1.35; }
+  .writing-subtitle { font-size: 14.5px; color: var(--muted); font-style: italic; }
+  .writing-tag { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); border: 0.5px solid var(--line); padding: 1px 7px; border-radius: 20px; display: inline-block; margin-top: 3px; width: fit-content; }
+  .writing-arrow { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--line); transition: color 0.15s, transform 0.15s; }
+  .writing-item:hover .writing-arrow { color: var(--muted); transform: translateX(3px); }
+  .item-actions { display: none; gap: 8px; align-items: center; }
+  .admin-active .item-actions { display: flex; }
+  .admin-active .writing-arrow { display: none; }
+  .action-icon { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); cursor: pointer; padding: 2px 8px; border-radius: 3px; border: 0.5px solid var(--line); background: var(--bg); transition: all 0.12s; }
+  .action-icon:hover { background: var(--hover-bg); color: var(--ink); }
+  .action-icon.del:hover { background: #fdf0eb; color: var(--red); border-color: var(--red); }
+
+  /* EDIT BAR */
+  .edit-bar { display: none; background: var(--ink); color: var(--bg); font-family: 'DM Mono', monospace; font-size: 11px; padding: 8px 48px; justify-content: space-between; align-items: center; }
+  .edit-bar.show { display: flex; }
+  .edit-bar button { background: none; border: 0.5px solid rgba(255,255,255,0.35); color: var(--bg); font-family: 'DM Mono', monospace; font-size: 11px; padding: 4px 14px; border-radius: 3px; cursor: pointer; margin-left: 8px; }
+  .edit-bar button:hover { background: rgba(255,255,255,0.12); }
+
+  /* FOOTER */
+  footer { padding: 24px 48px; display: flex; justify-content: space-between; align-items: center; border-top: 0.5px solid var(--line); }
+  .footer-copy { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .admin-btn { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); background: none; border: 0.5px solid var(--line); padding: 5px 14px; border-radius: 3px; cursor: pointer; transition: all 0.15s; }
+  .admin-btn:hover { color: var(--ink); border-color: var(--muted); }
+
+  /* OVERLAYS */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(17,17,16,0.5); z-index: 100; align-items: center; justify-content: center; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--bg); border: 0.5px solid var(--line); border-radius: 6px; padding: 36px 40px; width: 520px; max-width: 94vw; max-height: 90vh; overflow-y: auto; }
+  .modal-title { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 24px; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .form-input { width: 100%; background: var(--bg); border: 0.5px solid var(--line); border-radius: 4px; padding: 9px 12px; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--ink); outline: none; transition: border-color 0.15s; }
+  .form-input:focus { border-color: var(--muted); }
+
+  /* LINK TYPE TOGGLE */
+  .link-toggle { display: flex; gap: 0; margin-bottom: 12px; border: 0.5px solid var(--line); border-radius: 4px; overflow: hidden; }
+  .toggle-opt { flex: 1; font-family: 'DM Mono', monospace; font-size: 11px; padding: 7px 0; text-align: center; cursor: pointer; background: var(--bg); color: var(--muted); border: none; transition: all 0.15s; }
+  .toggle-opt.active { background: var(--ink); color: var(--bg); }
+
+  /* FILE UPLOAD AREA */
+  .upload-area { border: 0.5px dashed var(--line); border-radius: 4px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.15s; position: relative; }
+  .upload-area:hover { border-color: var(--muted); background: var(--hover-bg); }
+  .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .upload-area-text { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .upload-area-text span { color: var(--ink); text-decoration: underline; }
+  .file-chosen { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink); margin-top: 8px; padding: 6px 10px; background: var(--hover-bg); border-radius: 3px; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
+  .btn { font-family: 'DM Mono', monospace; font-size: 12px; padding: 9px 20px; border-radius: 4px; border: 0.5px solid var(--line); cursor: pointer; transition: all 0.15s; }
+  .btn-cancel { background: transparent; color: var(--muted); }
+  .btn-cancel:hover { background: var(--hover-bg); }
+  .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-danger { background: transparent; color: var(--red); border-color: var(--red); }
+  .btn-danger:hover { background: #fdf0eb; }
+  .pw-error { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--red); margin-top: 6px; display: none; }
+  .pw-error.show { display: block; }
+
+  /* ARTICLE VIEWER */
+  .article-overlay { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 200; overflow-y: auto; }
+  .article-overlay.open { display: block; }
+  .article-header { padding: 24px 48px; display: flex; justify-content: space-between; align-items: center; border-bottom: 0.5px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 1; }
+  .article-back { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: color 0.15s; }
+  .article-back:hover { color: var(--ink); }
+  .article-frame { width: 100%; height: calc(100vh - 65px); border: none; }
+
+  @media (max-width: 600px) {
+    nav, .page-header, .writings-container, .month-bar, footer { padding-left: 20px; padding-right: 20px; }
+    .writing-item { grid-template-columns: 60px 1fr; }
+    .writing-arrow { display: none; }
+    .modal { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- EDIT BAR -->
+<div class="edit-bar" id="editBar">
+  <span>✦ admin mode — azad singh</span>
+  <div>
+    <button onclick="openAddModal()">+ add writing</button>
+    <button onclick="lockAdmin()">lock</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-left">writings / azad</div>
+  <div class="nav-right">
+    <a href="#">home</a>
+    <a href="#" class="active">writings</a>
+  </div>
+</nav>
+
+<div class="page-header"><h1>Writings</h1></div>
+
+<!-- MONTH FILTER -->
+<div class="month-bar">
+  <button class="month-btn active" onclick="filterMonth(this,'all')">ALL</button>
+  <button class="month-btn" onclick="filterMonth(this,'JAN')">JAN</button>
+  <button class="month-btn" onclick="filterMonth(this,'FEB')">FEB</button>
+  <button class="month-btn" onclick="filterMonth(this,'MAR')">MAR</button>
+  <button class="month-btn" onclick="filterMonth(this,'APR')">APR</button>
+  <button class="month-btn" onclick="filterMonth(this,'MAY')">MAY</button>
+  <button class="month-btn" onclick="filterMonth(this,'JUN')">JUN</button>
+  <button class="month-btn" onclick="filterMonth(this,'JUL')">JUL</button>
+  <button class="month-btn" onclick="filterMonth(this,'AUG')">AUG</button>
+  <button class="month-btn" onclick="filterMonth(this,'SEP')">SEP</button>
+  <button class="month-btn" onclick="filterMonth(this,'OCT')">OCT</button>
+  <button class="month-btn" onclick="filterMonth(this,'NOV')">NOV</button>
+  <button class="month-btn" onclick="filterMonth(this,'DEC')">DEC</button>
+</div>
+
+<div class="writings-container">
+  <ul class="writings-list" id="writingsList"></ul>
+</div>
+
+<footer>
+  <div class="footer-copy">© AZAD SINGH 2026</div>
+  <button class="admin-btn" onclick="openPasswordModal()">admin</button>
+</footer>
+
+<!-- PASSWORD MODAL -->
+<div class="overlay" id="pwOverlay">
+  <div class="modal">
+    <div class="modal-title">Admin Access</div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-input" id="pwInput" placeholder="enter password" onkeydown="if(event.key==='Enter')checkPassword()">
+      <div class="pw-error" id="pwError">incorrect password</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="closeAll()">cancel</button>
+      <button class="btn btn-primary" onclick="checkPassword()">unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Add Writing</div>
+
+    <div class="form-group">
+      <label class="form-label">Month</label>
+      <select class="form-input" id="fMonth">
+        <option>JAN</option><option>FEB</option><option>MAR</option>
+        <option>APR</option><option>MAY</option><option>JUN</option>
+        <option>JUL</option><option>AUG</option><option>SEP</option>
+        <option>OCT</option><option>NOV</option><option>DEC</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Year (last 2 digits)</label>
+      <input type="text" class="form-input" id="fYear" placeholder="26" maxlength="2">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Topic / Title</label>
+      <input type="text" class="form-input" id="fTitle" placeholder="e.g. Nykaa, Zomato, Vedanta...">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Subtitle (optional)</label>
+      <input type="text" class="form-input" id="fSubtitle" placeholder="e.g. India's Beauty Platform Playbook">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Category / Tag (optional)</label>
+      <input type="text" class="form-input" id="fTag" placeholder="e.g. Equity Research, Thematic, Macro">
+    </div>
+
+    <!-- LINK TYPE -->
+    <div class="form-group">
+      <label class="form-label">Content Type</label>
+      <div class="link-toggle">
+        <button class="toggle-opt active" id="optUrl" onclick="switchType('url')">🔗 URL Link</button>
+        <button class="toggle-opt" id="optFile" onclick="switchType('file')">📄 HTML File</button>
+      </div>
+
+      <!-- URL input -->
+      <div id="urlSection">
+        <input type="text" class="form-input" id="fLink" placeholder="https://...">
+      </div>
+
+      <!-- FILE upload -->
+      <div id="fileSection" style="display:none">
+        <div class="upload-area" id="uploadArea">
+          <input type="file" accept=".html" id="fFile" onchange="fileSelected(this)">
+          <div class="upload-area-text">
+            HTML file yahan drop karo ya <span>click karke select karo</span>
+          </div>
+        </div>
+        <div class="file-chosen" id="fileChosen" style="display:none"></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-cancel" onclick="closeAll()">cancel</button>
+      <button class="btn btn-danger" id="deleteBtn" onclick="deleteEditing()" style="display:none">delete</button>
+      <button class="btn btn-primary" onclick="saveWriting()">save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ARTICLE VIEWER (fullscreen for attached HTML files) -->
+<div class="article-overlay" id="articleOverlay">
+  <div class="article-header">
+    <button class="article-back" onclick="closeArticle()">← back to writings</button>
+    <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)" id="articleTitle"></div>
+  </div>
+  <iframe class="article-frame" id="articleFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
+
+<script>
+  const ADMIN_PASSWORD = 'azad2026';
+
+  const DEFAULT_WRITINGS = [
+    {
+      id: 1, month: 'APR', year: '26',
+      title: 'Time Technoplast',
+      subtitle: 'From Plastic Drums to Composite Cylinders',
+      tag: 'Equity Research',
+      type: 'url', link: '#', fileData: null
+    }
+  ];
+
+  let writings = [], adminUnlocked = false, editingId = null, currentFilter = 'all';
+  let currentFileData = null, currentLinkType = 'url';
+
+  /* ── STORAGE ── */
+  function save() {
+    try { localStorage.setItem('azad_writings', JSON.stringify(writings)); } catch(e) { alert('Storage full! Purani files delete karo.'); }
+  }
+  function load() {
+    const s = localStorage.getItem('azad_writings');
+    writings = s ? JSON.parse(s) : [...DEFAULT_WRITINGS];
+  }
+
+  /* ── RENDER ── */
+  function render() {
+    const list = document.getElementById('writingsList');
+    const filtered = currentFilter === 'all' ? writings : writings.filter(w => w.month === currentFilter);
+    list.innerHTML = '';
+    if (filtered.length === 0) {
+      list.innerHTML = '<li style="padding:24px 8px;font-family:DM Mono,monospace;font-size:12px;color:var(--muted)">is mahine koi writing nahi.</li>';
+      return;
+    }
+    filtered.forEach(w => {
+      const li = document.createElement('li');
+      li.className = 'writing-item' + (adminUnlocked ? ' admin-active' : '');
+      li.innerHTML = `
+        <span class="writing-date">${w.month}.${w.year}</span>
+        <span class="writing-content">
+          <span class="writing-title">${w.title}</span>
+          ${w.subtitle ? `<span class="writing-subtitle">${w.subtitle}</span>` : ''}
+          ${w.tag ? `<span class="writing-tag">${w.tag}</span>` : ''}
+        </span>
+        <span class="writing-arrow">→</span>
+        <span class="item-actions">
+          <button class="action-icon" onclick="openEditModal(${w.id});event.stopPropagation()">edit</button>
+          <button class="action-icon del" onclick="quickDelete(${w.id});event.stopPropagation()">delete</button>
+        </span>`;
+
+      li.addEventListener('click', e => {
+        if (e.target.closest('.item-actions')) return;
+        if (w.type === 'file' && w.fileData) {
+          openArticle(w);
+        } else if (w.type === 'url' && w.link && w.link !== '#') {
+          window.open(w.link, '_blank');
+        }
+      });
+      list.appendChild(li);
+    });
+  }
+
+  /* ── ARTICLE VIEWER ── */
+  function openArticle(w) {
+    document.getElementById('articleTitle').textContent = w.title;
+    const frame = document.getElementById('articleFrame');
+    frame.srcdoc = w.fileData;
+    document.getElementById('articleOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeArticle() {
+    document.getElementById('articleOverlay').classList.remove('open');
+    document.getElementById('articleFrame').srcdoc = '';
+    document.body.style.overflow = '';
+  }
+
+  /* ── FILTER ── */
+  function filterMonth(btn, month) {
+    document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); currentFilter = month; render();
+  }
+
+  /* ── ADMIN ── */
+  function openPasswordModal() {
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwError').classList.remove('show');
+    document.getElementById('pwOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('pwInput').focus(), 100);
+  }
+  function checkPassword() {
+    if (document.getElementById('pwInput').value === ADMIN_PASSWORD) {
+      adminUnlocked = true; closeAll();
+      document.getElementById('editBar').classList.add('show'); render();
+    } else {
+      document.getElementById('pwError').classList.add('show');
+      document.getElementById('pwInput').value = ''; document.getElementById('pwInput').focus();
+    }
+  }
+  function lockAdmin() {
+    adminUnlocked = false; document.getElementById('editBar').classList.remove('show'); render();
+  }
+
+  /* ── LINK TYPE SWITCH ── */
+  function switchType(type) {
+    currentLinkType = type;
+    document.getElementById('optUrl').classList.toggle('active', type === 'url');
+    document.getElementById('optFile').classList.toggle('active', type === 'file');
+    document.getElementById('urlSection').style.display = type === 'url' ? 'block' : 'none';
+    document.getElementById('fileSection').style.display = type === 'file' ? 'block' : 'none';
+  }
+
+  /* ── FILE SELECT ── */
+  function fileSelected(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      currentFileData = e.target.result;
+      document.getElementById('fileChosen').style.display = 'block';
+      document.getElementById('fileChosen').textContent = '✓ ' + file.name;
+    };
+    reader.readAsText(file);
+  }
+
+  /* ── ADD / EDIT ── */
+  function openAddModal() {
+    editingId = null; currentFileData = null;
+    document.getElementById('modalTitle').textContent = 'Add Writing';
+    document.getElementById('deleteBtn').style.display = 'none';
+    document.getElementById('fMonth').value = 'APR';
+    document.getElementById('fYear').value = '26';
+    document.getElementById('fTitle').value = '';
+    document.getElementById('fSubtitle').value = '';
+    document.getElementById('fTag').value = '';
+    document.getElementById('fLink').value = '';
+    document.getElementById('fFile').value = '';
+    document.getElementById('fileChosen').style.display = 'none';
+    switchType('url');
+    document.getElementById('addOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('fTitle').focus(), 100);
+  }
+
+  function openEditModal(id) {
+    const w = writings.find(x => x.id === id); if (!w) return;
+    editingId = id; currentFileData = w.fileData || null;
+    document.getElementById('modalTitle').textContent = 'Edit Writing';
+    document.getElementById('deleteBtn').style.display = 'inline-block';
+    document.getElementById('fMonth').value = w.month;
+    document.getElementById('fYear').value = w.year;
+    document.getElementById('fTitle').value = w.title;
+    document.getElementById('fSubtitle').value = w.subtitle || '';
+    document.getElementById('fTag').value = w.tag || '';
+    document.getElementById('fLink').value = w.link || '';
+    document.getElementById('fFile').value = '';
+    if (w.type === 'file' && w.fileData) {
+      document.getElementById('fileChosen').style.display = 'block';
+      document.getElementById('fileChosen').textContent = '✓ file attached';
+    } else {
+      document.getElementById('fileChosen').style.display = 'none';
+    }
+    switchType(w.type || 'url');
+    document.getElementById('addOverlay').classList.add('open');
+  }
+
+  function saveWriting() {
+    const month = document.getElementById('fMonth').value;
+    const year  = document.getElementById('fYear').value.trim();
+    const title = document.getElementById('fTitle').value.trim();
+    const sub   = document.getElementById('fSubtitle').value.trim();
+    const tag   = document.getElementById('fTag').value.trim();
+    const link  = document.getElementById('fLink').value.trim();
+
+    if (!title) { alert('Title zaroori hai.'); return; }
+    if (currentLinkType === 'url' && !link) { alert('URL zaroori hai.'); return; }
+    if (currentLinkType === 'file' && !currentFileData) { alert('HTML file select karo.'); return; }
+
+    const entry = { month, year, title, subtitle: sub, tag, type: currentLinkType, link: currentLinkType === 'url' ? link : '#', fileData: currentLinkType === 'file' ? currentFileData : null };
+
+    if (editingId !== null) {
+      const idx = writings.findIndex(w => w.id === editingId);
+      if (idx > -1) writings[idx] = { id: editingId, ...entry };
+    } else {
+      const newId = writings.length ? Math.max(...writings.map(w => w.id)) + 1 : 1;
+      writings.unshift({ id: newId, ...entry });
+    }
+    save(); closeAll(); render();
+  }
+
+  function deleteEditing() {
+    if (editingId === null) return;
+    if (!confirm('Delete karna chahte ho?')) return;
+    writings = writings.filter(w => w.id !== editingId); save(); closeAll(); render();
+  }
+  function quickDelete(id) {
+    if (!confirm('Delete karna chahte ho?')) return;
+    writings = writings.filter(w => w.id !== id); save(); render();
+  }
+
+  function closeAll() { document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open')); }
+  document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) closeAll(); }));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeAll(); closeArticle(); } });
+
+  load(); render();
+</script>
+</body>
+</html>
